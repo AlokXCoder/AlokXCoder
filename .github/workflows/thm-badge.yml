@@ -15,31 +15,35 @@ jobs:
       - name: Fetch stats and generate badge
         run: |
           mkdir -p assets
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
-          # Fetch yearly activity data
-          ACTIVITY=$(curl -s "https://tryhackme.com/api/v2/public-profile/yearly-activity?username=Mrrob4t&year=2026" -H "User-Agent: Mozilla/5.0")
+          # Fetch completed rooms (uses user hash)
+          ROOMS_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/completed-rooms?user=6a88d38552319b9ba5781bbb&limit=1&page=1" -H "User-Agent: $UA")
+          echo "Rooms response: $ROOMS_DATA"
 
-          # Fetch completed rooms count (get total from first page)
-          ROOMS_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/completed-rooms?user=6a88d38552319b9ba5781bbb&limit=1&page=1" -H "User-Agent: Mozilla/5.0")
+          # Fetch yearly activity
+          ACTIVITY_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/yearly-activity?username=Mrrob4t&year=2026" -H "User-Agent: $UA")
+          echo "Activity response: $ACTIVITY_DATA"
 
-          # Extract values (adjust if JSON structure differs)
-          TOTAL_ROOMS=$(echo "$ROOMS_DATA" | grep -oP '"total"\s*:\s*\K[0-9]+' || echo "0")
-          YEARLY_ACTIVE=$(echo "$ACTIVITY" | grep -oP '"activeDays"\s*:\s*\K[0-9]+' || echo "0")
+          # Extract total rooms from paginator.totalDocs
+          TOTAL_ROOMS=$(echo "$ROOMS_DATA" | jq -r '.paginator.totalDocs // 0' 2>/dev/null || echo "0")
+
+          # Extract active days - try multiple possible field names
+          ACTIVE_DAYS=$(echo "$ACTIVITY_DATA" | jq -r '.totalDays // .activeDays // .total // 0' 2>/dev/null || echo "0")
+
+          echo "TOTAL_ROOMS=$TOTAL_ROOMS"
+          echo "ACTIVE_DAYS=$ACTIVE_DAYS"
 
           # Generate SVG badge
-          cat > assets/thm_propic.png.svg << 'SVGEOF'
+          cat > assets/thm_propic.png.svg << EOF
           <svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">
             <rect width="400" height="120" rx="10" fill="#1a1a2e"/>
             <text x="20" y="35" font-family="Arial" font-size="16" fill="#00b4d8" font-weight="bold">TryHackMe - Mrrob4t</text>
-            <text x="20" y="65" font-family="Arial" font-size="14" fill="#e0e0e0">Rooms: TOTAL_ROOMS_PLACEHOLDER</text>
-            <text x="20" y="90" font-family="Arial" font-size="14" fill="#e0e0e0">Active Days (2026): YEARLY_ACTIVE_PLACEHOLDER</text>
+            <text x="20" y="65" font-family="Arial" font-size="14" fill="#e0e0e0">Rooms: $TOTAL_ROOMS</text>
+            <text x="20" y="90" font-family="Arial" font-size="14" fill="#e0e0e0">Active Days (2026): $ACTIVE_DAYS</text>
             <text x="250" y="65" font-family="Arial" font-size="12" fill="#6c757d">tryhackme.com/p/Mrrob4t</text>
           </svg>
-          SVGEOF
-
-          # Replace placeholders with actual values
-          sed -i "s/TOTAL_ROOMS_PLACEHOLDER/$TOTAL_ROOMS/" assets/thm_propic.png.svg
-          sed -i "s/YEARLY_ACTIVE_PLACEHOLDER/$YEARLY_ACTIVE/" assets/thm_propic.png.svg
+          EOF
 
       - name: Commit and push
         run: |
