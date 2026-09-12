@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">
+  <rect width="400" height="120" rx="10" fill="#1a1a2e"/>
+  <text x="20" y="35" font-family="Arial" font-size="16" fill="#00b4d8" font-weight="bold">TryHackMe - Mrrob4t</text>
+  <text x="20" y="65" font-family="Arial" font-size="14" fill="#e0e0e0">Rooms: 0</text>
+  <text x="20" y="90" font-family="Arial" font-size="14" fill="#e0e0e0">Active Days (2026): 0</text>
+  <text x="250" y="65" font-family="Arial" font-size="12" fill="#6c757d">tryhackme.com/p/Mrrob4t</text>
+</svg>
