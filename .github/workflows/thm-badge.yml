@@ -12,20 +12,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Download THM badge
+      - name: Fetch stats and generate badge
         run: |
           mkdir -p assets
-          curl -sL -o assets/thm_propic.png "https://tryhackme-badges.s3.amazonaws.com/Mrrob4t.png"
-          if [ ! -s assets/thm_propic.png ]; then
-            echo "Badge download failed"
-            exit 1
-          fi
+
+          # Fetch yearly activity data
+          ACTIVITY=$(curl -s "https://tryhackme.com/api/v2/public-profile/yearly-activity?username=Mrrob4t&year=2026" -H "User-Agent: Mozilla/5.0")
+
+          # Fetch completed rooms count (get total from first page)
+          ROOMS_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/completed-rooms?user=6a88d38552319b9ba5781bbb&limit=1&page=1" -H "User-Agent: Mozilla/5.0")
+
+          # Extract values (adjust if JSON structure differs)
+          TOTAL_ROOMS=$(echo "$ROOMS_DATA" | grep -oP '"total"\s*:\s*\K[0-9]+' || echo "0")
+          YEARLY_ACTIVE=$(echo "$ACTIVITY" | grep -oP '"activeDays"\s*:\s*\K[0-9]+' || echo "0")
+
+          # Generate SVG badge
+          cat > assets/thm_propic.png.svg << 'SVGEOF'
+          <svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">
+            <rect width="400" height="120" rx="10" fill="#1a1a2e"/>
+            <text x="20" y="35" font-family="Arial" font-size="16" fill="#00b4d8" font-weight="bold">TryHackMe - Mrrob4t</text>
+            <text x="20" y="65" font-family="Arial" font-size="14" fill="#e0e0e0">Rooms: TOTAL_ROOMS_PLACEHOLDER</text>
+            <text x="20" y="90" font-family="Arial" font-size="14" fill="#e0e0e0">Active Days (2026): YEARLY_ACTIVE_PLACEHOLDER</text>
+            <text x="250" y="65" font-family="Arial" font-size="12" fill="#6c757d">tryhackme.com/p/Mrrob4t</text>
+          </svg>
+          SVGEOF
+
+          # Replace placeholders with actual values
+          sed -i "s/TOTAL_ROOMS_PLACEHOLDER/$TOTAL_ROOMS/" assets/thm_propic.png.svg
+          sed -i "s/YEARLY_ACTIVE_PLACEHOLDER/$YEARLY_ACTIVE/" assets/thm_propic.png.svg
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./assets/thm_propic.png
+          git add ./assets/thm_propic.png.svg
           if git diff --cached --quiet; then
             echo "No changes"
             exit 0
