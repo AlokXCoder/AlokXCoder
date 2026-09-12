@@ -79,5 +79,5 @@
 
 <!-- Snake Animation  -->
 <p align="center">
-  <img src="https://github.com/AlokXCoder/AlokXCoder/blob/output/github-snake-dark.svg" alt="snake gif" />
+  <img src="https://github.com/AlokXCoder/AlokXCoder/blob/main/github-snake-dark.svg" alt="snake gif" />
 </p>
