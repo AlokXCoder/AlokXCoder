@@ -30,7 +30,8 @@ jobs:
 
       - name: Push snake files to main
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "AlokXCoder"
+          git config user.email "AlokXCoder@users.noreply.github.com"
           git add dist/github-snake.svg dist/github-snake-dark.svg dist/ocean.gif
-          git commit -m "Update snake animation [skip ci]" && git push   
+          git commit -m "Update snake animation [skip ci]" || true
+          git push     
