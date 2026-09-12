@@ -8,48 +8,47 @@ on:
 jobs:
   update-badge:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Fetch stats and generate badge
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Generate badge screenshot
         run: |
           mkdir -p assets
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-
-          # Fetch completed rooms (uses user hash)
-          ROOMS_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/completed-rooms?user=6a88d38552319b9ba5781bbb&limit=1&page=1" -H "User-Agent: $UA")
-          echo "Rooms response: $ROOMS_DATA"
-
-          # Fetch yearly activity
-          ACTIVITY_DATA=$(curl -s "https://tryhackme.com/api/v2/public-profile/yearly-activity?username=Mrrob4t&year=2026" -H "User-Agent: $UA")
-          echo "Activity response: $ACTIVITY_DATA"
-
-          # Extract total rooms from paginator.totalDocs
-          TOTAL_ROOMS=$(echo "$ROOMS_DATA" | jq -r '.paginator.totalDocs // 0' 2>/dev/null || echo "0")
-
-          # Extract active days - try multiple possible field names
-          ACTIVE_DAYS=$(echo "$ACTIVITY_DATA" | jq -r '.totalDays // .activeDays // .total // 0' 2>/dev/null || echo "0")
-
-          echo "TOTAL_ROOMS=$TOTAL_ROOMS"
-          echo "ACTIVE_DAYS=$ACTIVE_DAYS"
-
-          # Generate SVG badge
-          cat > assets/thm_propic.png.svg << EOF
-          <svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">
-            <rect width="400" height="120" rx="10" fill="#1a1a2e"/>
-            <text x="20" y="35" font-family="Arial" font-size="16" fill="#00b4d8" font-weight="bold">TryHackMe - Mrrob4t</text>
-            <text x="20" y="65" font-family="Arial" font-size="14" fill="#e0e0e0">Rooms: $TOTAL_ROOMS</text>
-            <text x="20" y="90" font-family="Arial" font-size="14" fill="#e0e0e0">Active Days (2026): $ACTIVE_DAYS</text>
-            <text x="250" y="65" font-family="Arial" font-size="12" fill="#6c757d">tryhackme.com/p/Mrrob4t</text>
-          </svg>
-          EOF
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({
+              args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            });
+            const page = await browser.newPage();
+            await page.setViewport({ width: 800, height: 600 });
+            await page.goto('https://tryhackme.com/p/Mrrob4t', {
+              waitUntil: 'networkidle2',
+              timeout: 60000
+            });
+            await page.waitForSelector('.profile-stats, .stats, [class*=stat]', { timeout: 30000 }).catch(() => {});
+            await new Promise(r => setTimeout(r, 3000));
+            await page.screenshot({ path: 'assets/thm_propic.png', fullPage: false });
+            await browser.close();
+            console.log('Badge screenshot saved');
+          })();
+          "
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./assets/thm_propic.png.svg
+          git add ./assets/thm_propic.png
           if git diff --cached --quiet; then
             echo "No changes"
             exit 0
