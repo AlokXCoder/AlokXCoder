@@ -71,11 +71,13 @@
 </div>
 
 <!-- GitHub Stats -->
+<!-- GitHub Stats -->
+<!-- GitHub Stats -->
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=alokxcoder&theme=aura&hide_border=true&include_all_commits=true&count_private=true" width="55%" /> </br>
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=alokxcoder&theme=aura&hide_border=true" width="50%" />
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=alokxcoder&theme=aura&hide_border=true&include_all_commits=true&count_private=true&layout=compact" width="36%" /> </br>
-</div>
+  <img src="https://github-stats-extended.vercel.app/api?username=alokxcoder&theme=aura&hide_border=true&include_all_commits=true&count_private=true" width="550" />
+  <img src="https://streak-stats.demolab.com/?user=alokxcoder&theme=aura&hide_border=true" width="490" />
+  <img src="https://github-stats-extended.vercel.app/api/top-langs/?username=alokxcoder&theme=aura&hide_border=true&include_all_commits=true&count_private=true&layout=compact" width="350" />
+</div>   
 
 <!-- Snake Animation  -->
 <p align="center">
